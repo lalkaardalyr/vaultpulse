@@ -1,10 +1,10 @@
-// Package notify provides clients for delivering alert messages to external
-// notification services.
+// Package notify provides clients for sending alert notifications
+// to external services such as Slack and PagerDuty.
 //
-// Currently supported integrations:
+// Each client implements the Sender interface defined in sender.go,
+// allowing them to be used interchangeably within vaultpulse pipelines.
 //
-//   - Slack — posts messages to a configured Incoming Webhook URL.
-//
-// Each client implements a simple Send(message string) error interface so that
-// callers remain decoupled from the underlying transport.
+// Supported backends:
+//   - Slack (incoming webhooks)
+//   - PagerDuty (Events API v2)
 package notify
