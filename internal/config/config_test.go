@@ -107,3 +107,10 @@ monitor:
 		t.Errorf("expected token from env, got %s", cfg.Vault.Token)
 	}
 }
+
+func TestLoad_FileNotFound(t *testing.T) {
+	_, err := Load("/nonexistent/path/config.yaml")
+	if err == nil {
+		t.Fatal("expected error for nonexistent config file")
+	}
+}
