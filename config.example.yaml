@@ -1,42 +1,49 @@
-# VaultPulse example configuration
-# Copy this file to config.yaml and adjust values for your environment.
-
 vault:
-  # Vault server address (required)
-  address: "http://127.0.0.1:8200"
-
-  # Vault token — can also be set via VAULT_TOKEN environment variable
-  token: "s.xxxxxxxxxxxxxxxx"
-
-  # Optional: Vault namespace (Enterprise only)
-  namespace: ""
-
-  # Skip TLS verification (not recommended for production)
-  tls_skip_verify: false
+  address: "https://vault.example.com"
+  token: ""          # or set VAULT_TOKEN env var
+  paths:
+    - "secret/data/myapp/db"
+    - "secret/data/myapp/api"
 
 monitor:
-  # List of secret paths to monitor for expiry
-  paths:
-    - "secret/data/myapp/db-password"
-    - "secret/data/myapp/api-key"
-    - "secret/data/shared/tls-cert"
+  interval: "1h"
+  warning_threshold: "72h"
+  critical_threshold: "24h"
 
-  # How often to poll Vault for secret metadata (default: 1h)
-  interval: 1h
+output:
+  format: "table"    # table | json
 
 alerts:
-  # Days before expiry to trigger a WARNING alert (default: 14)
-  warning_days: 14
+  threshold: "warning"  # info | warning | critical
 
-  # Days before expiry to trigger a CRITICAL alert (default: 3)
-  critical_days: 3
+notify:
+  slack:
+    webhook_url: ""   # https://hooks.slack.com/services/...
 
-  # Slack incoming webhook URL (leave empty to disable)
-  slack_webhook: "https://hooks.slack.com/services/XXX/YYY/ZZZ"
+  pagerduty:
+    integration_key: ""
 
-  # SMTP server for email alerts (leave empty to disable)
-  # Format: host:port
-  email_smtp: "smtp.example.com:587"
+  opsgenie:
+    api_key: ""
 
-  # Recipient email address for alerts
-  email_to: "ops-team@example.com"
+  victorops:
+    webhook_url: ""
+
+  discord:
+    webhook_url: ""
+
+  teams:
+    webhook_url: ""
+
+  webhook:
+    url: ""
+
+  email:
+    host: ""
+    port: 587
+    from: ""
+    recipients: []
+
+  sns:
+    topic_arn: ""     # arn:aws:sns:<region>:<account-id>:<topic-name>
+                      # AWS credentials resolved from environment / IAM role
