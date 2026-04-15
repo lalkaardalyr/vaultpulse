@@ -50,6 +50,28 @@ func TestZendutyClient_Send_PostsCorrectPayload(t *testing.T) {
 	}
 }
 
+func TestZendutyClient_Send_PostsIntegrationKey(t *testing.T) {
+	var received zendutyPayload
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(body, &received)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client, _ := NewZendutyClient("expected-key")
+	client.endpoint = server.URL + "/api/events/"
+
+	if err := client.Send("test"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if received.IntegrationKey != "expected-key" {
+		t.Errorf("expected integration_key %q, got %q", "expected-key", received.IntegrationKey)
+	}
+}
+
 func TestZendutyClient_Send_NonOKStatus_ReturnsError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
