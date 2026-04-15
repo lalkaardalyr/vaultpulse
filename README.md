@@ -28,7 +28,7 @@ Set your Vault address and token, then run vaultpulse against a secret path:
 export VAULT_ADDR="https://vault.example.com"
 export VAULT_TOKEN="s.your-token-here"
 
-# a secret path and alert if expiry is within 7 days
+# Check a secret path and alert if expiry is within 7 days
 vaultpulse check --path secret/myapp/db-password --threshold 7d
 
 # Watch multiple paths and send a Slack alert
@@ -55,7 +55,17 @@ vaultpulse watch \
 --threshold     Alert window before expiry (e.g. 7d, 24h)
 --alert         Alert backend: slack, email, or stdout (default: stdout)
 --interval      Poll interval for watch mode (default: 1h)
+--webhook-url   Webhook URL for Slack alerts
 ```
+
+---
+
+## Environment Variables
+
+| Variable      | Description                              |
+|---------------|------------------------------------------|
+| `VAULT_ADDR`  | Address of the Vault server              |
+| `VAULT_TOKEN` | Token used to authenticate with Vault    |
 
 ---
 
