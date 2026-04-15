@@ -44,6 +44,26 @@ func TestDiscordClient_Send_PostsCorrectPayload(t *testing.T) {
 	}
 }
 
+// TestDiscordClient_Send_PostsJSONContentType verifies that the client sends
+// requests with the correct Content-Type header for Discord's API.
+func TestDiscordClient_Send_PostsJSONContentType(t *testing.T) {
+	var contentType string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		contentType = r.Header.Get("Content-Type")
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer server.Close()
+
+	client, _ := NewDiscordClient(server.URL)
+	if err := client.Send("test alert"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if contentType != "application/json" {
+		t.Errorf("expected Content-Type %q, got %q", "application/json", contentType)
+	}
+}
+
 func TestDiscordClient_Send_NonOKStatus_ReturnsError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
