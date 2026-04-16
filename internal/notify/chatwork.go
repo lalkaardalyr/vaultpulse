@@ -3,6 +3,7 @@ package notify
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -51,7 +52,8 @@ func (c *ChatworkClient) Send(message string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("chatwork: unexpected status %d", resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("chatwork: unexpected status %d: %s", resp.StatusCode, bytes.TrimSpace(body))
 	}
 	return nil
 }
