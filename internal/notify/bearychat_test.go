@@ -48,6 +48,21 @@ func TestBearyChatClient_Send_PostsCorrectPayload(t *testing.T) {
 	}
 }
 
+func TestBearyChatClient_Send_PostsCorrectContentType(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if ct := r.Header.Get("Content-Type"); ct != "application/json" {
+			t.Errorf("expected Content-Type application/json, got %q", ct)
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	c, _ := NewBearyChatClient(ts.URL)
+	if err := c.Send("test"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestBearyChatClient_Send_NonOKStatus_ReturnsError(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
