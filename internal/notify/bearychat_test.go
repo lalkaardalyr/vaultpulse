@@ -63,6 +63,21 @@ func TestBearyChatClient_Send_PostsCorrectContentType(t *testing.T) {
 	}
 }
 
+func TestBearyChatClient_Send_UsesPostMethod(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("expected POST method, got %q", r.Method)
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	c, _ := NewBearyChatClient(ts.URL)
+	if err := c.Send("test"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestBearyChatClient_Send_NonOKStatus_ReturnsError(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
