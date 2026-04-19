@@ -7,18 +7,13 @@ import (
 	"net/http"
 )
 
-// RocketChatClient sends alert messages to a Rocket.Chat incoming webhook.
+// RocketChatClient sends alerts to a Rocket.Chat webhook.
 type RocketChatClient struct {
 	webhookURL string
 	httpClient *http.Client
 }
 
-type rocketChatPayload struct {
-	Text string `json:"text"`
-}
-
-// NewRocketChatClient constructs a RocketChatClient.
-// webhookURL must be a non-empty Rocket.Chat incoming webhook URL.
+// NewRocketChatClient creates a new RocketChatClient.
 func NewRocketChatClient(webhookURL string) (*RocketChatClient, error) {
 	if webhookURL == "" {
 		return nil, fmt.Errorf("rocketchat: webhook URL must not be empty")
@@ -29,22 +24,20 @@ func NewRocketChatClient(webhookURL string) (*RocketChatClient, error) {
 	}, nil
 }
 
-// Send posts the message to the configured Rocket.Chat webhook.
-func (c *RocketChatClient) Send(message string) error {
-	payload := rocketChatPayload{Text: message}
+// Send posts a message to Rocket.Chat.
+func (c *RocketChatClient) Send(msg string) error {
+	payload := map[string]string{"text": msg}
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("rocketchat: failed to marshal payload: %w", err)
+		return fmt.Errorf("rocketchat: marshal error: %w", err)
 	}
-
 	resp, err := c.httpClient.Post(c.webhookURL, "application/json", bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("rocketchat: request failed: %w", err)
+		return fmt.Errorf("rocketchat: request error: %w", err)
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("rocketchat: unexpected status code %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("rocketchat: unexpected status %d", resp.StatusCode)
 	}
 	return nil
 }

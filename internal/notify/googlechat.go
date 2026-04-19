@@ -13,7 +13,7 @@ type GoogleChatClient struct {
 	httpClient *http.Client
 }
 
-// NewGoogleChatClient constructs a GoogleChatClient.
+// NewGoogleChatClient creates a new GoogleChatClient.
 func NewGoogleChatClient(webhookURL string) (*GoogleChatClient, error) {
 	if webhookURL == "" {
 		return nil, fmt.Errorf("googlechat: webhook URL must not be empty")
@@ -24,7 +24,7 @@ func NewGoogleChatClient(webhookURL string) (*GoogleChatClient, error) {
 	}, nil
 }
 
-// Send posts a message to the Google Chat webhook.
+// Send posts a message to Google Chat.
 func (c *GoogleChatClient) Send(msg string) error {
 	payload := map[string]string{"text": msg}
 	body, err := json.Marshal(payload)
