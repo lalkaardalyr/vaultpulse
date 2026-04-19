@@ -7,18 +7,13 @@ import (
 	"net/http"
 )
 
-// SpikeClient sends alert notifications to Spike.sh via their incoming webhook.
+// SpikeClient sends alerts to Spike.sh via webhook.
 type SpikeClient struct {
 	webhookURL string
 	httpClient *http.Client
 }
 
-type spikePayload struct {
-	Message string `json:"message"`
-	Severity string `json:"severity"`
-}
-
-// NewSpikeClient creates a new SpikeClient. webhookURL must not be empty.
+// NewSpikeClient creates a new SpikeClient.
 func NewSpikeClient(webhookURL string) (*SpikeClient, error) {
 	if webhookURL == "" {
 		return nil, fmt.Errorf("spike: webhook URL must not be empty")
@@ -30,11 +25,8 @@ func NewSpikeClient(webhookURL string) (*SpikeClient, error) {
 }
 
 // Send posts an alert message to Spike.sh.
-func (c *SpikeClient) Send(message string) error {
-	payload := spikePayload{
-		Message:  message,
-		Severity: "critical",
-	}
+func (c *SpikeClient) Send(msg string) error {
+	payload := map[string]string{"message": msg}
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("spike: failed to marshal payload: %w", err)
@@ -44,8 +36,8 @@ func (c *SpikeClient) Send(message string) error {
 		return fmt.Errorf("spike: request failed: %w", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("spike: unexpected status code %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("spike: unexpected status %d", resp.StatusCode)
 	}
 	return nil
 }
