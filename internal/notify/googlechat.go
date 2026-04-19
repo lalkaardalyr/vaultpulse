@@ -13,10 +13,6 @@ type GoogleChatClient struct {
 	httpClient *http.Client
 }
 
-type googleChatPayload struct {
-	Text string `json:"text"`
-}
-
 // NewGoogleChatClient creates a new GoogleChatClient.
 func NewGoogleChatClient(webhookURL string) (*GoogleChatClient, error) {
 	if webhookURL == "" {
@@ -28,20 +24,20 @@ func NewGoogleChatClient(webhookURL string) (*GoogleChatClient, error) {
 	}, nil
 }
 
-// Send posts a message to the Google Chat webhook.
-func (c *GoogleChatClient) Send(message string) error {
-	payload := googleChatPayload{Text: message}
+// Send posts a message to Google Chat.
+func (c *GoogleChatClient) Send(msg string) error {
+	payload := map[string]string{"text": msg}
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("googlechat: failed to marshal payload: %w", err)
+		return fmt.Errorf("googlechat: marshal error: %w", err)
 	}
 	resp, err := c.httpClient.Post(c.webhookURL, "application/json", bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("googlechat: request failed: %w", err)
+		return fmt.Errorf("googlechat: request error: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("googlechat: unexpected status code: %d", resp.StatusCode)
+		return fmt.Errorf("googlechat: unexpected status %d", resp.StatusCode)
 	}
 	return nil
 }
