@@ -9,7 +9,7 @@ import (
 
 const amplitudeEndpoint = "https://api2.amplitude.com/2/httpapi"
 
-// AmplitudeClient sends VaultPulse alert events to Amplitude Analytics.
+// AmplitudeClient sends events to Amplitude.
 type AmplitudeClient struct {
 	apiKey   string
 	endpoint string
@@ -17,10 +17,9 @@ type AmplitudeClient struct {
 }
 
 // NewAmplitudeClient creates a new AmplitudeClient.
-// apiKey must not be empty.
 func NewAmplitudeClient(apiKey string) (*AmplitudeClient, error) {
 	if apiKey == "" {
-		return nil, fmt.Errorf("amplitude: api key must not be empty")
+		return nil, fmt.Errorf("amplitude: API key must not be empty")
 	}
 	return &AmplitudeClient{
 		apiKey:     apiKey,
@@ -29,26 +28,15 @@ func NewAmplitudeClient(apiKey string) (*AmplitudeClient, error) {
 	}, nil
 }
 
-type amplitudePayload struct {
-	APIKey string           `json:"api_key"`
-	Events []amplitudeEvent `json:"events"`
-}
-
-type amplitudeEvent struct {
-	UserID    string `json:"user_id"`
-	EventType string `json:"event_type"`
-	EventProperties map[string]string `json:"event_properties"`
-}
-
-// Send delivers the alert message as an Amplitude event.
+// Send posts an event to Amplitude.
 func (c *AmplitudeClient) Send(message string) error {
-	payload := amplitudePayload{
-		APIKey: c.apiKey,
-		Events: []amplitudeEvent{
+	payload := map[string]interface{}{
+		"api_key": c.apiKey,
+		"events": []map[string]interface{}{
 			{
-				UserID:    "vaultpulse",
-				EventType: "vault_secret_alert",
-				EventProperties: map[string]string{
+				"event_type":    "vaultpulse_alert",
+				"user_id":       "vaultpulse",
+				"event_properties": map[string]string{
 					"message": message,
 				},
 			},
@@ -66,7 +54,7 @@ func (c *AmplitudeClient) Send(message string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("amplitude: unexpected status code: %d", resp.StatusCode)
 	}
 	return nil
