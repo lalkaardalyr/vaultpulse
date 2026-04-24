@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// RevoltClient sends alert messages to a Revolt channel via a webhook.
+// RevoltClient sends alert messages to a Revolt webhook.
 type RevoltClient struct {
 	webhookURL string
 	httpClient *http.Client
@@ -18,7 +18,7 @@ type revoltPayload struct {
 }
 
 // NewRevoltClient creates a new RevoltClient.
-// webhookURL must be a valid Revolt webhook URL.
+// Returns an error if webhookURL is empty.
 func NewRevoltClient(webhookURL string) (*RevoltClient, error) {
 	if webhookURL == "" {
 		return nil, fmt.Errorf("revolt: webhook URL must not be empty")
