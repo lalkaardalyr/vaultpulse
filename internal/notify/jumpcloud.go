@@ -7,41 +7,50 @@ import (
 	"net/http"
 )
 
-// JumpCloudClient sends alert events to JumpCloud via its webhook API.
+const jumpCloudDefaultEndpoint = "https://api.jumpcloud.com/insights/directory/v1/events"
+
+// JumpCloudClient sends alert events to the JumpCloud Insights API.
 type JumpCloudClient struct {
-	webhookURL string
 	apiKey     string
+	orgID      string
+	endpoint   string
 	httpClient *http.Client
 }
 
+type jumpCloudPayload struct {
+	Message string `json:"message"`
+	OrgID   string `json:"orgId"`
+}
+
 // NewJumpCloudClient creates a new JumpCloudClient.
-// Both webhookURL and apiKey must be non-empty.
-func NewJumpCloudClient(webhookURL, apiKey string) (*JumpCloudClient, error) {
-	if webhookURL == "" {
-		return nil, fmt.Errorf("jumpcloud: webhook URL must not be empty")
-	}
+// Returns an error if apiKey or orgID is empty.
+func NewJumpCloudClient(apiKey, orgID string) (*JumpCloudClient, error) {
 	if apiKey == "" {
 		return nil, fmt.Errorf("jumpcloud: API key must not be empty")
 	}
+	if orgID == "" {
+		return nil, fmt.Errorf("jumpcloud: org ID must not be empty")
+	}
 	return &JumpCloudClient{
-		webhookURL: webhookURL,
 		apiKey:     apiKey,
+		orgID:      orgID,
+		endpoint:   jumpCloudDefaultEndpoint,
 		httpClient: &http.Client{},
 	}, nil
 }
 
-// Send posts an alert message to the JumpCloud webhook endpoint.
+// Send posts an alert event to the JumpCloud Insights API.
 func (c *JumpCloudClient) Send(message string) error {
-	payload := map[string]string{
-		"message": message,
-		"source":  "vaultpulse",
+	payload := jumpCloudPayload{
+		Message: message,
+		OrgID:   c.orgID,
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("jumpcloud: failed to marshal payload: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, c.webhookURL, bytes.NewReader(body))
+	req, err := http.NewRequest(http.MethodPost, c.endpoint, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("jumpcloud: failed to create request: %w", err)
 	}
