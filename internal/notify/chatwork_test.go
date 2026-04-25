@@ -9,19 +9,19 @@ import (
 func TestNewChatworkClient_EmptyToken_ReturnsError(t *testing.T) {
 	_, err := NewChatworkClient("", "12345")
 	if err == nil {
-		t.Fatal("expected error for empty token")
+		t.Fatal("expected error for empty token, got nil")
 	}
 }
 
 func TestNewChatworkClient_EmptyRoomID_ReturnsError(t *testing.T) {
-	_, err := NewChatworkClient("token", "")
+	_, err := NewChatworkClient("tok", "")
 	if err == nil {
-		t.Fatal("expected error for empty roomID")
+		t.Fatal("expected error for empty room ID, got nil")
 	}
 }
 
 func TestNewChatworkClient_ValidConfig_ReturnsClient(t *testing.T) {
-	c, err := NewChatworkClient("token", "12345")
+	c, err := NewChatworkClient("tok", "12345")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -31,11 +31,15 @@ func TestNewChatworkClient_ValidConfig_ReturnsClient(t *testing.T) {
 }
 
 func TestChatworkClient_Send_PostsCorrectPayload(t *testing.T) {
-	var gotToken, gotBody string
+	var gotBody string
+	var gotToken string
+
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gotToken = r.Header.Get("X-ChatWorkToken")
-		r.ParseForm()
+		if err := r.ParseForm(); err != nil {
+			t.Errorf("failed to parse form: %v", err)
+		}
 		gotBody = r.FormValue("body")
+		gotToken = r.Header.Get("X-ChatWorkToken")
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer ts.Close()
@@ -43,14 +47,14 @@ func TestChatworkClient_Send_PostsCorrectPayload(t *testing.T) {
 	c, _ := NewChatworkClient("mytoken", "99")
 	c.baseURL = ts.URL
 
-	if err := c.Send("hello vault"); err != nil {
+	if err := c.Send("hello chatwork"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if gotToken != "mytoken" {
-		t.Errorf("expected token mytoken, got %s", gotToken)
+	if gotBody != "hello chatwork" {
+		t.Errorf("expected body 'hello chatwork', got %q", gotBody)
 	}
-	if gotBody != "hello vault" {
-		t.Errorf("expected body 'hello vault', got %s", gotBody)
+	if gotToken != "mytoken" {
+		t.Errorf("expected token 'mytoken', got %q", gotToken)
 	}
 }
 
@@ -60,19 +64,19 @@ func TestChatworkClient_Send_NonOKStatus_ReturnsError(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	c, _ := NewChatworkClient("token", "99")
+	c, _ := NewChatworkClient("tok", "1")
 	c.baseURL = ts.URL
 
 	if err := c.Send("msg"); err == nil {
-		t.Fatal("expected error on non-OK status")
+		t.Fatal("expected error on non-OK status, got nil")
 	}
 }
 
 func TestChatworkClient_Send_UnreachableServer_ReturnsError(t *testing.T) {
-	c, _ := NewChatworkClient("token", "99")
+	c, _ := NewChatworkClient("tok", "1")
 	c.baseURL = "http://127.0.0.1:0"
 
 	if err := c.Send("msg"); err == nil {
-		t.Fatal("expected error on unreachable server")
+		t.Fatal("expected error for unreachable server, got nil")
 	}
 }
