@@ -9,7 +9,7 @@ import (
 
 const circleciBaseURL = "https://circleci.com/api/v2"
 
-// CircleCIClient triggers a CircleCI pipeline as an alert notification.
+// CircleCIClient triggers a CircleCI pipeline as an alert mechanism.
 type CircleCIClient struct {
 	token      string
 	project    string
@@ -23,7 +23,6 @@ type circleCIPayload struct {
 }
 
 // NewCircleCIClient creates a new CircleCIClient.
-// Returns an error if token or project is empty.
 func NewCircleCIClient(token, project string) (*CircleCIClient, error) {
 	if token == "" {
 		return nil, fmt.Errorf("circleci: token must not be empty")
@@ -43,9 +42,7 @@ func NewCircleCIClient(token, project string) (*CircleCIClient, error) {
 func (c *CircleCIClient) Send(message string) error {
 	payload := circleCIPayload{
 		Branch: "main",
-		Parameters: map[string]string{
-			"alert_message": message,
-		},
+		Parameters: map[string]string{"alert_message": message},
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -57,8 +54,8 @@ func (c *CircleCIClient) Send(message string) error {
 	if err != nil {
 		return fmt.Errorf("circleci: create request: %w", err)
 	}
-	req.Header.Set("Circle-Token", c.token)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Circle-Token", c.token)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -67,7 +64,7 @@ func (c *CircleCIClient) Send(message string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("circleci: unexpected status code: %d", resp.StatusCode)
+		return fmt.Errorf("circleci: unexpected status %d", resp.StatusCode)
 	}
 	return nil
 }
